@@ -1,0 +1,40 @@
+{
+  "name": "@dasheck0/face-generator",
+  "version": "1.0.0",
+  "description": "MCP server for generating human face images with various shapes and sizes",
+  "keywords": ["mcp", "face", "generator", "image", "profile"],
+  "author": "Stefan Neidig <stefan@dasheck0.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dasheck0/face-generator.git"
+  },
+  "homepage": "https://github.com/dasheck0/face-generator",
+  "bugs": {
+    "url": "https://github.com/dasheck0/face-generator/issues"
+  },
+  "private": true,
+  "type": "module",
+  "bin": {
+    "face-generator": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "0.6.0",
+    "axios": "^1.7.9",
+    "fs": "^0.0.1-security",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  }
+}
