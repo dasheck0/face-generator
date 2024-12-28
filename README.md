@@ -13,7 +13,7 @@ A Model Context Protocol (MCP) server for generating human face images using htt
 ## Installation
 
 ```bash
-npm install @yourusername/face-generator
+npm install @dasheck0/face-generator
 ```
 
 ## Usage
