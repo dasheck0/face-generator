@@ -1,6 +1,7 @@
 # Face Generator MCP Server
 
 A Model Context Protocol (MCP) server for generating human face images using https://thispersondoesnotexist.com.
+Forked from https://github.com/dasheck0/face-generator to allow responses in ImageContent format and updated readme.
 
 ## Features
 
