@@ -2,7 +2,15 @@
 
 [![Smithery badge](https://smithery.ai/badge/@dasheck0/face-generator)](https://smithery.ai/server/@dasheck0/face-generator)
 
+
 This project provides a Model Context Protocol (MCP) server for generating human face images using https://thispersondoesnotexist.com. Think of it as a tool that lets other applications, like Cline, generate realistic-looking faces on demand.
+=======
+<a href="https://glama.ai/mcp/servers/0v6oomxing">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/0v6oomxing/badge" alt="Face Generator Server MCP server" />
+</a>
+
+## Features
+
 
 This guide is designed for beginners, so we'll walk through everything step-by-step. We'll cover:
 
