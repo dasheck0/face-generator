@@ -2,6 +2,10 @@
 
 A Model Context Protocol (MCP) server for generating human face images using https://thispersondoesnotexist.com.
 
+<a href="https://glama.ai/mcp/servers/0v6oomxing">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/0v6oomxing/badge" alt="Face Generator Server MCP server" />
+</a>
+
 ## Features
 
 - Generate human face images
