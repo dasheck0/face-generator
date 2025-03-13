@@ -2,8 +2,6 @@
 
 [![Smithery badge](https://smithery.ai/badge/@dasheck0/face-generator)](https://smithery.ai/server/@dasheck0/face-generator)
 
-=======
-
 <a href="https://glama.ai/mcp/servers/0v6oomxing">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/0v6oomxing/badge" alt="Face Generator Server MCP server" />
 </a>
