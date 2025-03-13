@@ -4,6 +4,9 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ImageContent,
+  CallToolResult,
+  ErrorCode
 } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
 import fs from 'fs';
@@ -16,7 +19,7 @@ class FaceGenerator {
     this.server = new Server(
       {
         name: 'face-generator',
-        version: '0.1.0',
+        version: '0.1.2',
       },
       {
         capabilities: {
@@ -79,6 +82,11 @@ class FaceGenerator {
                 default: 32,
                 minimum: 0,
                 maximum: 512
+              },
+              returnImageContent: {
+                type: 'boolean',
+                description: 'Return image as base64 encoded content instead of file path (default: false)',
+                default: false
               }
             },
             required: ['outputDir'],
@@ -100,6 +108,7 @@ class FaceGenerator {
         height?: number;
         shape?: string;
         borderRadius?: number;
+        returnImageContent?: boolean;
       }
       
       if (!request.params.arguments) {
@@ -112,9 +121,10 @@ class FaceGenerator {
         fileName = `${Date.now()}.jpg`,
         count = 1,
         width = 256,
-        height = 256
+        height = 256,
+        returnImageContent = false
       } = args;
-      
+
       try {
         // Create directory if it doesn't exist
         if (!fs.existsSync(outputDir)) {
@@ -123,7 +133,8 @@ class FaceGenerator {
 
         const sharp = (await import('sharp')).default;
         const results = [];
-        
+        const imageContents: ImageContent[] = [];
+
         for (let i = 0; i < count; i++) {
           // Fetch image
           const response = await axios.get('https://thispersondoesnotexist.com', {
@@ -146,7 +157,7 @@ class FaceGenerator {
                 blend: 'dest-in'
               }]);
               break;
-            
+
             case 'rounded':
               const borderRadius = args.borderRadius || 32;
               const roundedShape = Buffer.from(
@@ -159,33 +170,82 @@ class FaceGenerator {
               break;
           }
 
-          image = image.png();
+          const imageBuffer = await image.png().toBuffer();
+          const base64Image = imageBuffer.toString('base64');
 
           // Generate unique filename if multiple images
           // Ensure .png extension
           const baseName = fileName.replace(/\.(jpg|jpeg|png)$/i, '');
-          const finalFileName = count > 1 ? 
-            `${baseName}_${i}.png` : 
-            `${baseName}.png`;
+          const finalFileName = count > 1
+            ? `${baseName}_${i}.png`
+            : `${baseName}.png`;
 
           // Save image
           const filePath = path.join(outputDir, finalFileName);
-          await image.toFile(filePath);
-          
+          await fs.promises.writeFile(filePath, imageBuffer);
+
+          if (returnImageContent) {
+            imageContents.push({
+              type: 'image',
+              mimeType: 'image/png',
+              data: base64Image,
+            });
+          }
+
           results.push(filePath);
         }
 
+        const content = returnImageContent
+          ? imageContents
+          : [
+              {
+                type: 'text',
+                text: `Generated ${count} face image(s):\n${results.join('\n')}`,
+              },
+            ];
+
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Generated ${count} face image(s):\n${results.join('\n')}`,
-            },
-          ],
+          content,
         };
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        return {
+        console.error(error);
+        let errorCode = ErrorCode.InternalError;
+        let errorMessage = 'Unknown error occurred';
+
+        if (error instanceof axios.AxiosError) {
+          if (error.code === 'ENOTFOUND') {
+            errorCode = ErrorCode.MethodNotFound;
+            errorMessage = 'Failed to fetch image from thispersondoesnotexist.com: Network error.';
+          } else {
+            errorCode = ErrorCode.InternalError;
+            errorMessage = `Failed to fetch image: ${error.message}`;
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+          if (error.message.includes('ENOSPC')) {
+            errorCode = ErrorCode.InternalError;
+            errorMessage = 'No space left on device.';
+          } else if (error.message.includes('EEXIST')) {
+            errorCode = ErrorCode.InternalError;
+            errorMessage = 'File already exists.';
+          } else if (error.message.includes('ENOENT')) {
+            errorCode = ErrorCode.InternalError;
+            errorMessage = 'No such file or directory.';
+          } else if (error.message.includes('Invalid width')) {
+            errorCode = ErrorCode.InvalidParams;
+            errorMessage = 'Invalid width parameter.';
+          } else if (error.message.includes('Invalid height')) {
+            errorCode = ErrorCode.InvalidParams;
+            errorMessage = 'Invalid height parameter.';
+          } else if (error.message.includes('Input buffer contains unsupported image format')) {
+            errorCode = ErrorCode.InvalidParams;
+            errorMessage = 'Unsupported image format.';
+          }
+        } else {
+          errorMessage = String(error);
+        }
+
+        const result: CallToolResult = {
           content: [
             {
               type: 'text',
@@ -194,6 +254,7 @@ class FaceGenerator {
           ],
           isError: true,
         };
+        return result;
       }
     });
   }
